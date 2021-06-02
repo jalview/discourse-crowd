@@ -130,6 +130,29 @@ class CrowdAuthenticator < ::Auth::OAuth2Authenticator
     true
   end
 
+  def set_groups(user, auth)
+    crowd_groups = auth[:groups]
+    if SiteSetting.crowd_groups_enabled
+      group_map = Hash.new
+      SiteSetting.crowd_groups_mapping.each { |map|
+        keyval = map.split(":", 2)
+        group_map[keyval[0]] = keyval[1]
+      }
+      crowd_groups.each { |crowd_group|
+        if group_map.has_key?(crowd_group) || !SiteSetting.crowd_groups_remove_unmapped_groups
+          result = nil
+          discourse_group = group_map[crowd_group]
+          group = Group.find(discourse_group) if discourse_group
+          result = group.add(user) if group
+          if !result && SiteSetting.crowd_verbose_log
+            @log.push("error: crowd_group '#{crowd_group}' mapped to discourse_group '#{discourse_group}' didn't get added to user.id '#{user.id}'")
+          end
+        end
+      }
+    end
+  end
+    
+
 end
 
 title = GlobalSetting.try(:crowd_title) || "Crowd"
