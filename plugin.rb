@@ -124,6 +124,7 @@ class CrowdAuthenticator < ::Auth::OAuth2Authenticator
 
   def after_create_account(user, auth)
     @mode.after_create_account(user, auth)
+    set_groups(user, auth) if SiteSetting.crowd_groups_enabled
   end
 
   def enabled?
@@ -132,26 +133,25 @@ class CrowdAuthenticator < ::Auth::OAuth2Authenticator
 
   def set_groups(user, auth)
     crowd_groups = auth[:groups]
-    if SiteSetting.crowd_groups_enabled
-      group_map = Hash.new
-      SiteSetting.crowd_groups_mapping.each { |map|
-        keyval = map.split(":", 2)
-        group_map[keyval[0]] = keyval[1]
-      }
-      crowd_groups.each { |crowd_group|
-        if group_map.has_key?(crowd_group) || !SiteSetting.crowd_groups_remove_unmapped_groups
-          result = nil
-          discourse_group = group_map[crowd_group]
-          group = Group.find(discourse_group) if discourse_group
-          result = group.add(user) if group
-          if !result && SiteSetting.crowd_verbose_log
-            @log.push("error: crowd_group '#{crowd_group}' mapped to discourse_group '#{discourse_group}' didn't get added to user.id '#{user.id}'")
-          end
-        end
-      }
-    end
+    group_map = Hash.new
+    SiteSetting.crowd_groups_mapping.each { |map|
+      keyval = map.split(":", 2)
+      group_map[keyval[0]] = keyval[1]
+      @log.push("info: crowd_groups: map='#{map}', keyval[0]='#{keyval[0]}', keyval[1]='#{keyval[1]}'")
+    }
+    crowd_groups.each { |crowd_group|
+      @log.push("info: crowd_groups:   crowd_group='#{crowd_group}'") if SiteSetting.crowd_verbose_log
+      if group_map.has_key?(crowd_group) || !SiteSetting.crowd_groups_remove_unmapped_groups
+        result = nil
+        discourse_group = group_map[crowd_group]
+        @log.push("info: crowd_groups:     crowd_group='#{crowd_group}', discourse_group='#{discourse_group}'") if SiteSetting.crowd_verbose_log
+        actual_group = Group.find(discourse_group) if discourse_group
+        @log.push("info: crowd_groups:     actual_group='#{actual_group}'") if SiteSetting.crowd_verbose_log
+        result = actual_group.add(user) if actual_group
+        @log.push("error: crowd_group '#{crowd_group}' mapped to discourse_group '#{discourse_group}' didn't get added to user.id '#{user.id}'") if !result
+      end
+    }
   end
-    
 
 end
 
