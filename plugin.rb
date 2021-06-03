@@ -143,12 +143,15 @@ class CrowdAuthenticator < ::Auth::OAuth2Authenticator
       @log.push("info: crowd_groups:   crowd_group='#{crowd_group}'") if SiteSetting.crowd_verbose_log
       if group_map.has_key?(crowd_group) || !SiteSetting.crowd_groups_remove_unmapped_groups
         result = nil
-        discourse_group = group_map[crowd_group]
-        @log.push("info: crowd_groups:     crowd_group='#{crowd_group}', discourse_group='#{discourse_group}'") if SiteSetting.crowd_verbose_log
-        actual_group = Group.find(discourse_group) if discourse_group
-        @log.push("info: crowd_groups:     actual_group='#{actual_group}'") if SiteSetting.crowd_verbose_log
-        result = actual_group.add(user) if actual_group
-        @log.push("error: crowd_group '#{crowd_group}' mapped to discourse_group '#{discourse_group}' didn't get added to user.id '#{user.id}'") if !result
+        discourse_groups = group_map[crowd_group]
+        @log.push("info: crowd_groups:     crowd_group='#{crowd_group}', discourse_groups='#{discourse_groups}'") if SiteSetting.crowd_verbose_log
+        discourse_groups.split(",").each { |discourse_group|
+          @log.push("info: crowd_groups:     discourse_group='#{discourse_group}'") if SiteSetting.crowd_verbose_log
+          actual_group = Group.find(discourse_group) if discourse_group
+          @log.push("info: crowd_groups:     discourse_group='#{discourse_group}', actual_group='#{actual_group}'") if SiteSetting.crowd_verbose_log
+          result = actual_group.add(user) if actual_group
+          @log.push("error: crowd_group '#{crowd_group}' mapped to discourse_group '#{discourse_group}' didn't get added to user.id '#{user.id}'") if !result
+        }
       end
     }
   end
