@@ -16,6 +16,31 @@ class CrowdAuthenticatorMode
   def after_create_account(user, auth)
   end
 
+  def set_groups(user, auth)
+    crowd_groups = auth[:groups]
+    group_map = Hash.new
+    SiteSetting.crowd_groups_mapping.each { |map|
+      keyval = map.split(":", 2)
+      group_map[keyval[0]] = keyval[1]
+      Rails.logger.debug("debug: crowd_groups: map='#{map}', keyval[0]='#{keyval[0]}', keyval[1]='#{keyval[1]}'")
+    }
+    crowd_groups.each { |crowd_group|
+      Rails.logger.debug("debug: crowd_groups:   crowd_group='#{crowd_group}'")
+      if group_map.has_key?(crowd_group) || !SiteSetting.crowd_groups_remove_unmapped_groups
+        result = nil
+        discourse_groups = group_map[crowd_group]
+        Rails.logger.debug("debug: crowd_groups:     crowd_group='#{crowd_group}', discourse_groups='#{discourse_groups}'")
+        discourse_groups.split(",").each { |discourse_group|
+          Rails.logger.debug("debug: crowd_groups:     discourse_group='#{discourse_group}'")
+          actual_group = Group.find(discourse_group) if discourse_group
+          Rails.logger.debug("debug: crowd_groups:     discourse_group='#{discourse_group}', actual_group='#{actual_group}'")
+          result = actual_group.add(user) if actual_group
+          Rails.logger.error("debug: crowd_group '#{crowd_group}' mapped to discourse_group '#{discourse_group}' didn't get added to user.id '#{user.id}'") if !result
+        }
+      end
+    }
+  end
+
 end
 
 # this is mode where when the user will create an account locally in the discourse,
@@ -45,8 +70,13 @@ class CrowdAuthenticatorModeSeparated < CrowdAuthenticatorMode
 
   def after_create_account(user, auth)
     ::PluginStore.set("crowd", "crowd_user_#{auth[:extra_data][:crowd_user_id]}", user_id: user.id)
+    Rails.logger.info("RUNNING SET_GROUPS 1")
+    set_groups(user, auth) if SiteSetting.crowd_groups_enabled
   end
 
+  def set_groups(user, auth)
+    super(user, auth)
+  end
 end
 
 # mode of authentication, where user can access the locally created account with the
@@ -65,10 +95,21 @@ class CrowdAuthenticatorModeMixed < CrowdAuthenticatorMode
       result.user.username = crowd_uid
       result.user.email = crowd_info.email
       result.user.save
+    else
+      Rails.logger.info("RUNNING SET_GROUPS 2")
+      set_groups(user, auth) if SiteSetting.crowd_groups_enabled
     end
     result
   end
 
+  def after_create_account(user, auth)
+    Rails.logger.info("RUNNING SET_GROUPS 3")
+    set_groups(user, auth) if SiteSetting.crowd_groups_enabled
+  end
+
+  def set_groups(user, auth)
+    super(user, auth)
+  end
 end
 
 class CrowdAuthenticator < ::Auth::OAuth2Authenticator
@@ -124,38 +165,11 @@ class CrowdAuthenticator < ::Auth::OAuth2Authenticator
 
   def after_create_account(user, auth)
     @mode.after_create_account(user, auth)
-    set_groups(user, auth) if SiteSetting.crowd_groups_enabled
   end
 
   def enabled?
     true
   end
-
-  def set_groups(user, auth)
-    crowd_groups = auth[:groups]
-    group_map = Hash.new
-    SiteSetting.crowd_groups_mapping.each { |map|
-      keyval = map.split(":", 2)
-      group_map[keyval[0]] = keyval[1]
-      Rails.logger.debug("debug: crowd_groups: map='#{map}', keyval[0]='#{keyval[0]}', keyval[1]='#{keyval[1]}'")
-    }
-    crowd_groups.each { |crowd_group|
-      Rails.logger.debug("debug: crowd_groups:   crowd_group='#{crowd_group}'")
-      if group_map.has_key?(crowd_group) || !SiteSetting.crowd_groups_remove_unmapped_groups
-        result = nil
-        discourse_groups = group_map[crowd_group]
-        Rails.logger.debug("debug: crowd_groups:     crowd_group='#{crowd_group}', discourse_groups='#{discourse_groups}'")
-        discourse_groups.split(",").each { |discourse_group|
-          Rails.logger.debug("debug: crowd_groups:     discourse_group='#{discourse_group}'")
-          actual_group = Group.find(discourse_group) if discourse_group
-          Rails.logger.debug("debug: crowd_groups:     discourse_group='#{discourse_group}', actual_group='#{actual_group}'")
-          result = actual_group.add(user) if actual_group
-          Rails.logger.error("debug: crowd_group '#{crowd_group}' mapped to discourse_group '#{discourse_group}' didn't get added to user.id '#{user.id}'") if !result
-        }
-      end
-    }
-  end
-
 end
 
 title = GlobalSetting.try(:crowd_title) || "Crowd"
