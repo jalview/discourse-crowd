@@ -22,18 +22,18 @@ class CrowdAuthenticatorMode
     SiteSetting.crowd_groups_mapping.each { |map|
       keyval = map.split(":", 2)
       group_map[keyval[0]] = keyval[1]
-      Rails.logger.debug("debug: crowd_groups: map='#{map}', keyval[0]='#{keyval[0]}', keyval[1]='#{keyval[1]}'")
+      Rails.logger.warn("debug: crowd_groups: map='#{map}', keyval[0]='#{keyval[0]}', keyval[1]='#{keyval[1]}'")
     }
     crowd_groups.each { |crowd_group|
-      Rails.logger.debug("debug: crowd_groups:   crowd_group='#{crowd_group}'")
+      Rails.logger.warn("debug: crowd_groups:   crowd_group='#{crowd_group}'")
       if group_map.has_key?(crowd_group) || !SiteSetting.crowd_groups_remove_unmapped_groups
         result = nil
         discourse_groups = group_map[crowd_group]
-        Rails.logger.debug("debug: crowd_groups:     crowd_group='#{crowd_group}', discourse_groups='#{discourse_groups}'")
+        Rails.logger.warn("debug: crowd_groups:     crowd_group='#{crowd_group}', discourse_groups='#{discourse_groups}'")
         discourse_groups.split(",").each { |discourse_group|
-          Rails.logger.debug("debug: crowd_groups:     discourse_group='#{discourse_group}'")
+          Rails.logger.warn("debug: crowd_groups:     discourse_group='#{discourse_group}'")
           actual_group = Group.find(discourse_group) if discourse_group
-          Rails.logger.debug("debug: crowd_groups:     discourse_group='#{discourse_group}', actual_group='#{actual_group}'")
+          Rails.logger.warn("debug: crowd_groups:     discourse_group='#{discourse_group}', actual_group='#{actual_group}'")
           result = actual_group.add(user) if actual_group
           Rails.logger.error("debug: crowd_group '#{crowd_group}' mapped to discourse_group '#{discourse_group}' didn't get added to user.id '#{user.id}'") if !result
         }
@@ -70,7 +70,7 @@ class CrowdAuthenticatorModeSeparated < CrowdAuthenticatorMode
 
   def after_create_account(user, auth)
     ::PluginStore.set("crowd", "crowd_user_#{auth[:extra_data][:crowd_user_id]}", user_id: user.id)
-    Rails.logger.info("RUNNING SET_GROUPS 1")
+    Rails.logger.warn("RUNNING SET_GROUPS 1")
     set_groups(user, auth) if SiteSetting.crowd_groups_enabled
   end
 
@@ -96,14 +96,14 @@ class CrowdAuthenticatorModeMixed < CrowdAuthenticatorMode
       result.user.email = crowd_info.email
       result.user.save
     else
-      Rails.logger.info("RUNNING SET_GROUPS 2")
+      Rails.logger.warn("RUNNING SET_GROUPS 2")
       set_groups(user, auth) if SiteSetting.crowd_groups_enabled
     end
     result
   end
 
   def after_create_account(user, auth)
-    Rails.logger.info("RUNNING SET_GROUPS 3")
+    Rails.logger.warn("RUNNING SET_GROUPS 3")
     set_groups(user, auth) if SiteSetting.crowd_groups_enabled
   end
 
