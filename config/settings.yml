@@ -5,7 +5,7 @@ plugins:
     default: false
     client: true
   crowd_groups_mapping:
-    default: [""]
+    default: ""
     type: list
     list_type: simple
   crowd_groups_remove_unmapped_groups:
