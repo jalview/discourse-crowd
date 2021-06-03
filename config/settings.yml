@@ -2,7 +2,7 @@ plugins:
   crowd_verbose_log:
     default: false
   crowd_groups_enabled:
-    default: false
+    default: true
     client: true
   crowd_groups_mapping:
     default: ""
