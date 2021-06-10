@@ -136,7 +136,7 @@ class CrowdAuthenticator < ::Auth::OAuth2Authenticator
           end
         end
         OmniAuth::Form.build(title: (GlobalSetting.try(:crowd_popup_title) || GlobalSetting.try(:crowd_title) || "Crowd Authentication")) do
-          text_field 'Login', 'username'
+          text_field 'Username', 'username'
           password_field 'Password', 'password'
           html "\n<input type='hidden' name='authenticity_token' value='#{token}'/>" if token
           button 'Login'
