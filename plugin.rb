@@ -129,7 +129,11 @@ class CrowdAuthenticator < ::Auth::OAuth2Authenticator
 
         
         if (defined? GlobalSetting.crowd_custom_css)
-          OmniAuth.config.form_css = GlobalSetting.crowd_custom_css
+          if (defined? GlobalSetting.crowd_css_replace) && "true" == GlobalSetting.crowd_css_replace
+            OmniAuth.config.form_css = GlobalSetting.crowd_custom_css
+          else
+            OmniAuth.config.form_css << GlobalSetting.crowd_custom_css
+          end
         end
         OmniAuth::Form.build(title: (GlobalSetting.try(:crowd_popup_title) || GlobalSetting.try(:crowd_title) || "Crowd Authentication")) do
           text_field 'Login', 'username'
