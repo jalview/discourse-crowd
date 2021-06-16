@@ -14,7 +14,6 @@ gem "omniauth_crowd", "2.2.3"
 class CrowdAuthenticatorMode
 
   def after_create_account(user, auth)
-    Rails.logger.error("debug: crowd_group. CHECKPOINT 1. user.id '#{user.id}'")
   end
 
   def set_groups(user, auth)
@@ -86,19 +85,21 @@ end
 class CrowdAuthenticatorModeMixed < CrowdAuthenticatorMode
 
   def after_authenticate(auth)
+    Rails.logger.warn("RUNNING CROWDAUTHENTICATORMODEMIXED.AFTER_AUTHENTICATE(auth)")
     crowd_uid = auth[:uid]
     crowd_info = auth[:info]
     result = Auth::Result.new
     result.email_valid = true
     result.user = User.where(username: crowd_uid).first
     if (!result.user)
+      Rails.logger.warn("RUNNING SET_GROUPS 2a")
       result.user = User.new
       result.user.name = crowd_info.name
       result.user.username = crowd_uid
       result.user.email = crowd_info.email
       result.user.save
     else
-      Rails.logger.warn("RUNNING SET_GROUPS 2")
+      Rails.logger.warn("RUNNING SET_GROUPS 2b")
       set_groups(user, auth) if SiteSetting.crowd_groups_enabled
     end
     result
