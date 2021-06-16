@@ -14,6 +14,7 @@ gem "omniauth_crowd", "2.2.3"
 class CrowdAuthenticatorMode
 
   def after_create_account(user, auth)
+    Rails.logger.error("debug: crowd_group. CHECKPOINT 1. user.id '#{user.id}'")
   end
 
   def set_groups(user, auth)
