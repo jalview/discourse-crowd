@@ -50,6 +50,7 @@ end
 class CrowdAuthenticatorModeSeparated < CrowdAuthenticatorMode
 
   def after_authenticate(auth)
+    Rails.logger.warn("discourse-crowd: DEBUG: RUNNING AFTER_AUTHENTICATE 1")
     result = Auth::Result.new
     uid = auth[:uid]
     result.name = auth[:info].name
