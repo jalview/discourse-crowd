@@ -167,7 +167,7 @@ class CrowdAuthenticator < ::Auth::OAuth2Authenticator
 
   def after_authenticate(auth)
     if SiteSetting.crowd_verbose_log
-      Rails.logger.warn("Crowd verbose log:\n TEST\n#{auth.inspect}")
+      Rails.logger.warn("Crowd verbose log:\n TEST2\n#{auth.inspect}")
     end
 
     @mode.after_authenticate(auth)
