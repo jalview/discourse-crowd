@@ -19,7 +19,7 @@ class CrowdAuthenticatorMode
   def set_groups(user, auth)
     crowd_groups = auth[:groups]
     group_map = Hash.new
-    SiteSetting.crowd_groups_mapping.each { |map|
+    SiteSetting.crowd_groups_mapping.split("|").each { |map|
       keyval = map.split(":", 2)
       group_map[keyval[0]] = keyval[1]
       Rails.logger.warn("debug: crowd_groups: map='#{map}', keyval[0]='#{keyval[0]}', keyval[1]='#{keyval[1]}'")
