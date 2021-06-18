@@ -17,14 +17,18 @@ class CrowdAuthenticatorMode
   end
 
   def set_groups(user, auth)
-    crowd_groups = auth[:groups]
+    info = auth[:info]
+    crowd_groups = info[:groups] if info
     group_map = Hash.new
     SiteSetting.crowd_groups_mapping.split("|").each { |map|
       keyval = map.split(":", 2)
       group_map[keyval[0]] = keyval[1]
       Rails.logger.warn("debug: crowd_groups: map='#{map}', keyval[0]='#{keyval[0]}', keyval[1]='#{keyval[1]}'")
     }
-    if !(crowd_groups.nil? || group_map.empty?)
+    Rails.logger.warn("debug: crowd_groups:   crowd_groups='#{crowd_groups}'")
+    Rails.logger.warn("debug: crowd_groups:   auth='#{auth.inspect}'")
+    Rails.logger.warn("debug: crowd_groups:   auth.keys='#{auth.keys}'")
+    if !(crowd_groups == nil || group_map.empty?)
       crowd_groups.each { |crowd_group|
         Rails.logger.warn("debug: crowd_groups:   crowd_group='#{crowd_group}'")
         if group_map.has_key?(crowd_group) || !SiteSetting.crowd_groups_remove_unmapped_groups
@@ -33,9 +37,10 @@ class CrowdAuthenticatorMode
           Rails.logger.warn("debug: crowd_groups:     crowd_group='#{crowd_group}', discourse_groups='#{discourse_groups}'")
           discourse_groups.split(",").each { |discourse_group|
             Rails.logger.warn("debug: crowd_groups:     discourse_group='#{discourse_group}'")
-            actual_group = Group.find(discourse_group) if discourse_group
+            actual_group = Group.find_by(name: discourse_group) if discourse_group
             Rails.logger.warn("debug: crowd_groups:     discourse_group='#{discourse_group}', actual_group='#{actual_group}'")
             result = actual_group.add(user) if actual_group
+            Rails.logger.error("debug: crowd_group '#{crowd_group}' mapped to discourse_group '#{discourse_group}' DID get added to user.id '#{user.id}'") if result
             Rails.logger.error("debug: crowd_group '#{crowd_group}' mapped to discourse_group '#{discourse_group}' didn't get added to user.id '#{user.id}'") if !result
           }
         end
@@ -62,10 +67,14 @@ class CrowdAuthenticatorModeSeparated < CrowdAuthenticatorMode
     current_info = ::PluginStore.get("crowd", "crowd_user_#{uid}")
     if current_info
       result.user = User.where(id: current_info[:user_id]).first
+      Rails.logger.warn("discourse-crowd: DEBUG: RUNNING AFTER_AUTHENTICATE 1 FOUND USER CURRENT_INFO")
     end
 
     # If no link exists try by email
     result.user ||= User.find_by_email(result.email)
+
+    Rails.logger.warn("discourse-crowd: DEBUG: RUNNING AFTER_AUTHENTICATE 1 result.user='#{result.user}'")
+    set_groups(result.user, auth)
 
     result.extra_data = { crowd_user_id: uid }
     result
