@@ -17,31 +17,21 @@ class CrowdAuthenticatorMode
   end
 
   def set_groups(user, auth)
-    info = auth[:info]
-    crowd_groups = info[:groups] if info
+    crowd_groups = auth[:info].groups
     group_map = Hash.new
     SiteSetting.crowd_groups_mapping.split("|").each { |map|
       keyval = map.split(":", 2)
       group_map[keyval[0]] = keyval[1]
-      Rails.logger.warn("debug: crowd_groups: map='#{map}', keyval[0]='#{keyval[0]}', keyval[1]='#{keyval[1]}'")
     }
-    Rails.logger.warn("debug: crowd_groups:   crowd_groups='#{crowd_groups}'")
-    Rails.logger.warn("debug: crowd_groups:   auth='#{auth.inspect}'")
-    Rails.logger.warn("debug: crowd_groups:   auth.keys='#{auth.keys}'")
     if !(crowd_groups == nil || group_map.empty?)
       crowd_groups.each { |crowd_group|
-        Rails.logger.warn("debug: crowd_groups:   crowd_group='#{crowd_group}'")
         if group_map.has_key?(crowd_group) || !SiteSetting.crowd_groups_remove_unmapped_groups
           result = nil
           discourse_groups = group_map[crowd_group]
-          Rails.logger.warn("debug: crowd_groups:     crowd_group='#{crowd_group}', discourse_groups='#{discourse_groups}'")
           discourse_groups.split(",").each { |discourse_group|
-            Rails.logger.warn("debug: crowd_groups:     discourse_group='#{discourse_group}'")
             actual_group = Group.find_by(name: discourse_group) if discourse_group
-            Rails.logger.warn("debug: crowd_groups:     discourse_group='#{discourse_group}', actual_group='#{actual_group}'")
             result = actual_group.add(user) if actual_group
-            Rails.logger.error("debug: crowd_group '#{crowd_group}' mapped to discourse_group '#{discourse_group}' DID get added to user.id '#{user.id}'") if result
-            Rails.logger.error("debug: crowd_group '#{crowd_group}' mapped to discourse_group '#{discourse_group}' didn't get added to user.id '#{user.id}'") if !result
+            Rails.logger.debug("DEBUG: crowd_group '#{crowd_group}' mapped to discourse_group '#{discourse_group}' added to user '#{user.username}'") if result
           }
         end
       }
