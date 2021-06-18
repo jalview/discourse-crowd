@@ -18,25 +18,36 @@ class CrowdAuthenticatorMode
 
   def set_groups(user, auth)
     return unless SiteSetting.crowd_groups_enabled
-    crowd_groups = auth[:info].groups
+    user_crowd_groups = auth[:info].groups
     group_map = Hash.new
+    check_groups = Hash.new
     SiteSetting.crowd_groups_mapping.split("|").each { |map|
       keyval = map.split(":", 2)
       group_map[keyval[0]] = keyval[1]
+      check_groups[keyval[1]] = 0
     }
-    if !(crowd_groups == nil || group_map.empty?)
-      crowd_groups.each { |crowd_group|
-        if group_map.has_key?(crowd_group) || !SiteSetting.crowd_groups_remove_unmapped_groups
+    if !(user_crowd_groups == nil || group_map.empty?)
+      user_crowd_groups.each { |user_crowd_group|
+        if group_map.has_key?(user_crowd_group) || !SiteSetting.crowd_groups_remove_unmapped_groups
           result = nil
-          discourse_groups = group_map[crowd_group]
+          discourse_groups = group_map[user_crowd_group]
           discourse_groups.split(",").each { |discourse_group|
-            actual_group = Group.find_by(name: discourse_group) if discourse_group
+            next unless discourse_group
+            check_groups[discourse_group] = 1
+            actual_group = Group.find_by(name: discourse_group)
             result = actual_group.add(user) if actual_group
-            Rails.logger.debug("DEBUG: crowd_group '#{crowd_group}' mapped to discourse_group '#{discourse_group}' added to user '#{user.username}'") if result
+            Rails.logger.warn("DEBUG: user_crowd_group '#{user_crowd_group}' mapped to discourse_group '#{discourse_group}' added to user '#{user.username}'") if result && SiteSetting.crowd_verbose_log
           }
         end
       }
     end
+    check_groups.keys.each { |discourse_group|
+      next if Group.AUTO_GROUPS.has_key?(discourse_group)
+      actual_group = Group.find_by(name: discourse_group)
+      next unless actual_group
+      result = actual_group.remove(user)
+      Rails.logger.warn("DEBUG: User '#{user.username}' removed from discourse_group '#{discourse_group}'") if result && SiteSetting.crowd_verbose_log
+    }
   end
 
 end
@@ -47,7 +58,6 @@ end
 class CrowdAuthenticatorModeSeparated < CrowdAuthenticatorMode
 
   def after_authenticate(auth)
-    Rails.logger.warn("discourse-crowd: DEBUG: RUNNING AFTER_AUTHENTICATE 1")
     result = Auth::Result.new
     uid = auth[:uid]
     result.name = auth[:info].name
@@ -162,7 +172,7 @@ class CrowdAuthenticator < ::Auth::OAuth2Authenticator
 
   def after_authenticate(auth)
     if SiteSetting.crowd_verbose_log
-      Rails.logger.warn("Crowd verbose log:\n TEST2\n#{auth.inspect}")
+      Rails.logger.warn("Crowd verbose log:\n #{auth.inspect}")
     end
 
     @mode.after_authenticate(auth)
