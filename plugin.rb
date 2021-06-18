@@ -17,6 +17,7 @@ class CrowdAuthenticatorMode
   end
 
   def set_groups(user, auth)
+    return unless SiteSetting.crowd_groups_enabled
     crowd_groups = auth[:info].groups
     group_map = Hash.new
     SiteSetting.crowd_groups_mapping.split("|").each { |map|
@@ -57,14 +58,12 @@ class CrowdAuthenticatorModeSeparated < CrowdAuthenticatorMode
     current_info = ::PluginStore.get("crowd", "crowd_user_#{uid}")
     if current_info
       result.user = User.where(id: current_info[:user_id]).first
-      Rails.logger.warn("discourse-crowd: DEBUG: RUNNING AFTER_AUTHENTICATE 1 FOUND USER CURRENT_INFO")
     end
 
     # If no link exists try by email
     result.user ||= User.find_by_email(result.email)
 
-    Rails.logger.warn("discourse-crowd: DEBUG: RUNNING AFTER_AUTHENTICATE 1 result.user='#{result.user}'")
-    set_groups(result.user, auth)
+    set_groups(result.user, auth) if result.user
 
     result.extra_data = { crowd_user_id: uid }
     result
@@ -72,8 +71,7 @@ class CrowdAuthenticatorModeSeparated < CrowdAuthenticatorMode
 
   def after_create_account(user, auth)
     ::PluginStore.set("crowd", "crowd_user_#{auth[:extra_data][:crowd_user_id]}", user_id: user.id)
-    Rails.logger.warn("RUNNING SET_GROUPS 1")
-    set_groups(user, auth) if SiteSetting.crowd_groups_enabled
+    set_groups(user, auth)
   end
 
   def set_groups(user, auth)
@@ -86,29 +84,24 @@ end
 class CrowdAuthenticatorModeMixed < CrowdAuthenticatorMode
 
   def after_authenticate(auth)
-    Rails.logger.warn("RUNNING CROWDAUTHENTICATORMODEMIXED.AFTER_AUTHENTICATE(auth)")
     crowd_uid = auth[:uid]
     crowd_info = auth[:info]
     result = Auth::Result.new
     result.email_valid = true
     result.user = User.where(username: crowd_uid).first
     if (!result.user)
-      Rails.logger.warn("RUNNING SET_GROUPS 2a")
       result.user = User.new
       result.user.name = crowd_info.name
       result.user.username = crowd_uid
       result.user.email = crowd_info.email
       result.user.save
-    else
-      Rails.logger.warn("RUNNING SET_GROUPS 2b")
-      set_groups(user, auth) if SiteSetting.crowd_groups_enabled
     end
+    set_groups(user, auth)
     result
   end
 
   def after_create_account(user, auth)
-    Rails.logger.warn("RUNNING SET_GROUPS 3")
-    set_groups(user, auth) if SiteSetting.crowd_groups_enabled
+    set_groups(user, auth)
   end
 
   def set_groups(user, auth)
