@@ -42,7 +42,7 @@ class CrowdAuthenticatorMode
       }
     end
     check_groups.keys.each { |discourse_group|
-      next if Group.AUTO_GROUPS.has_key?(discourse_group)
+      next if Group::AUTO_GROUPS.has_key?(discourse_group)
       actual_group = Group.find_by(name: discourse_group)
       next unless actual_group
       result = actual_group.remove(user)
