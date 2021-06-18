@@ -35,8 +35,12 @@ class CrowdAuthenticatorMode
             next unless discourse_group
             check_groups[discourse_group] = 1
             actual_group = Group.find_by(name: discourse_group)
-            result = actual_group.add(user) if actual_group
-            Rails.logger.warn("DEBUG: user_crowd_group '#{user_crowd_group}' mapped to discourse_group '#{discourse_group}' added to user '#{user.username}'") if result && SiteSetting.crowd_verbose_log
+            if (!actual_group)
+              Rails.logger.warn("WARN: crowd_group '#{user_crowd_group}' is configured to map to discourse_group '#{discourse_group}' but this does not seem to exist")
+              next
+            end
+            result = actual_group.add(user)
+            Rails.logger.debug("DEBUG: user_crowd_group '#{user_crowd_group}' mapped to discourse_group '#{discourse_group}' added to user '#{user.username}'") if result && SiteSetting.crowd_verbose_log
           }
         end
       }
