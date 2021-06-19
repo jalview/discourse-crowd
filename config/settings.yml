@@ -10,7 +10,3 @@ plugins:
     list_type: simple
   crowd_groups_remove_unmapped_groups:
     default: true
-  crowd_groups_allow_adding_to_auto_groups:
-    default: false
-  crowd_groups_allow_removing_from_auto_groups:
-    default: false

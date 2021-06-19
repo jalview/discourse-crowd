@@ -35,7 +35,7 @@ class CrowdAuthenticatorMode
             next unless discourse_group
             check_groups[discourse_group] = 1
             actual_group = Group.find_by(name: discourse_group)
-            next unless (SiteSetting.crowd_groups_allow_adding_to_auto_groups || !actual_group.automatic) # skip unless auto_groups allowed or it's not an auto_group
+            next if actual_group.automatic # skip if it's an auto_group
             if (!actual_group)
               Rails.logger.warn("WARN: crowd_group '#{user_crowd_group}' is configured to map to discourse_group '#{discourse_group}' but this does not seem to exist")
               next
@@ -49,7 +49,7 @@ class CrowdAuthenticatorMode
     check_groups.keys.each { |discourse_group|
       actual_group = Group.find_by(name: discourse_group)
       next unless actual_group
-      next unless (SiteSetting.crowd_groups_allow_removing_from_auto_groups || !actual_group.automatic) # skip unless auto_groups allowed or it's not an auto_group
+      next if actual_group.automatic # skip if it's an auto_group
       next if check_groups[discourse_group] > 0
       result = actual_group.remove(user)
       Rails.logger.warn("DEBUG: User '#{user.username}' removed from discourse_group '#{discourse_group}'") if result && SiteSetting.crowd_verbose_log
