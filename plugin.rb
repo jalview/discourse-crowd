@@ -49,6 +49,7 @@ class CrowdAuthenticatorMode
       next if Group::AUTO_GROUPS.has_key?(discourse_group)
       actual_group = Group.find_by(name: discourse_group)
       next unless actual_group
+      next if check_groups[discourse_group] > 0
       result = actual_group.remove(user)
       Rails.logger.warn("DEBUG: User '#{user.username}' removed from discourse_group '#{discourse_group}'") if result && SiteSetting.crowd_verbose_log
     }
