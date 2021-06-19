@@ -2,7 +2,7 @@ en:
   site_settings:
     crowd_verbose_log: 'Enable verbose logging of crowd auth payload'
     crowd_groups_enabled: "Enable group membership from crowd settings"
-    crowd_groups_mapping: "Mappings of crowd group ids to comma-separated list of discourse group ids, e.g. crowd_group:discourse_group_members,discourse_group_moderators"
+    crowd_groups_mapping: "Mappings of crowd group names to comma-separated list of discourse group names, e.g. jira-developers:discourse_devgroup_members,discourse_usergroup_moderators"
     crowd_groups_remove_unmapped_groups: "If user is not in a mapped crowd group, remove existing membership of corresponding discourse group"
     crowd_groups_allow_adding_to_auto_groups: "Allow mapping to include adding users to auto groups (admins, moderators, trust_level_* etc). A potential security risk, off by default. Only turn this on if you know what you're doing."
     crowd_groups_allow_removing_from_auto_groups: "Allow mapping to include removing users from auto groups (admins, moderators, trust_level_* etc). A risk of breaking things, off by default. Only turn this on if you know what you're doing."
