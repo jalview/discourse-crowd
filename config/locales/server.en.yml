@@ -2,5 +2,5 @@ en:
   site_settings:
     crowd_verbose_log: 'enable verbose logging of crowd auth payload'
     crowd_groups_enabled: "enable group membership from crowd settings"
-    crowd_groups_mapping: "mappings of crowd group ids to comma-separated list of discourse group ids, e.g. `crowd_group:discourse_group_members,discourse_group_moderators`"
+    crowd_groups_mapping: "mappings of crowd group ids to comma-separated list of discourse group ids, e.g. crowd_group:discourse_group_members,discourse_group_moderators"
     crowd_groups_remove_unmapped_groups: "if user is not in a mapped crowd group, remove existing membership of corresponding discourse group"
