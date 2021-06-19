@@ -33,6 +33,7 @@ class CrowdAuthenticatorMode
           discourse_groups = group_map[user_crowd_group]
           discourse_groups.split(",").each { |discourse_group|
             next unless discourse_group
+Rails.logger.warn("WARN: crowd_group adding groups: discourse_group='#{discourse_group}', crowd_groups_allow_adding_to_auto_groups='#{SiteSetting.crowd_groups_allow_adding_to_auto_groups}', AUTO_GROUPS.has_key?('#{discourse_group}')=#{Group::AUTO_GROUPS.has_key?(discourse_group)}")
             next unless (SiteSetting.crowd_groups_allow_adding_to_auto_groups || !Group::AUTO_GROUPS.has_key?(discourse_group)) # skip unless auto_groups allowed or it's not an auto_group
             check_groups[discourse_group] = 1
             actual_group = Group.find_by(name: discourse_group)
@@ -47,6 +48,7 @@ class CrowdAuthenticatorMode
       }
     end
     check_groups.keys.each { |discourse_group|
+      Rails.logger.warn("WARN: crowd_group removing groups: discourse_group='#{discourse_group}', crowd_groups_allow_adding_to_auto_groups='#{SiteSetting.crowd_groups_allow_adding_to_auto_groups}', AUTO_GROUPS.has_key?('#{discourse_group}')=#{Group::AUTO_GROUPS.has_key?(discourse_group)}")
       next unless (SiteSetting.crowd_groups_allow_removing_from_auto_groups || !Group::AUTO_GROUPS.has_key?(discourse_group)) # skip unless auto_groups allowed or it's not an auto_group
       actual_group = Group.find_by(name: discourse_group)
       next unless actual_group
