@@ -27,7 +27,7 @@ Add the following settings to your `discourse.conf` file:
 - `crowd_application_mode` - can be one of `separated` or `mixed`
 
   
-## Configuring Atlassian Group mappings
+### Configuring Atlassian Group mappings
 
 This part of the configuration allows users who login through discourse-crowd to automatically be added or removed from Discourse groups (at login time).
 These can be configured in https://my.discourse.site/admin/site_settings/category/plugins?filter=plugin%3Adiscourse-crowd
