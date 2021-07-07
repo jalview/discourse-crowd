@@ -2,5 +2,5 @@ en:
   js:
     login:
       crowd:
-        name: "Crowd"
-        title: "with Crowd"
+        name: "Jalview Crowd"
+        title: "with Jalview Crowd"
