@@ -69,7 +69,8 @@ class CrowdAuthenticatorModeSeparated < CrowdAuthenticatorMode
     result.name = auth[:info].name
     result.username = uid
     result.email = auth[:info].email
-    result.email_valid = true
+# Allow setting to decide whether to validate email or not. Some Jira setups don't.
+    result.email_valid = SiteSetting.crowd_validate_email
 
     current_info = ::PluginStore.get("crowd", "crowd_user_#{uid}")
     if current_info
@@ -103,7 +104,8 @@ class CrowdAuthenticatorModeMixed < CrowdAuthenticatorMode
     crowd_uid = auth[:uid]
     crowd_info = auth[:info]
     result = Auth::Result.new
-    result.email_valid = true
+# Allow setting to decide whether to validate email or not. Some Jira setups don't.
+    result.email_valid = SiteSetting.crowd_validate_email
     result.user = User.where(username: crowd_uid).first
     if (!result.user)
       result.user = User.new
