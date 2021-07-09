@@ -18,7 +18,7 @@ class CrowdAuthenticatorMode
 
   def set_groups(user, auth)
     return unless SiteSetting.crowd_groups_enabled
-    user_crowd_groups = auth[:info].groups
+    user_crowd_groups = ( auth[:info] && auth[:info].groups ) ? auth[:info].groups : nil
     group_map = Hash.new
     check_groups = Hash.new
     SiteSetting.crowd_groups_mapping.split("|").each { |map|
