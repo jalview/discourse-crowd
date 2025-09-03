@@ -5,7 +5,7 @@
 # version: 0.1
 # author: Robin Ward
 
-gem "omniauth_crowd", "2.2.3"
+gem "omniauth_crowd", "2.4.0"
 
 after_initialize do
   AdminDashboardData.add_problem_check do
