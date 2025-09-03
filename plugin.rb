@@ -5,7 +5,8 @@
 # version: 0.1
 # author: Robin Ward
 
-gem "omniauth_crowd", github: "jalview/omniauth_crowd"
+gem "omniauth_crowd", :github => "jalview/omniauth_crowd"
+bundle install
 
 after_initialize do
   AdminDashboardData.add_problem_check do
